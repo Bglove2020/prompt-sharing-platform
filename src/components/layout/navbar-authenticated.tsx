@@ -59,19 +59,19 @@ export function NavbarAuthenticated() {
         isScrolled ? "shadow-sm" : ""
       }`}
     >
-      <Link href="/" className="flex items-center gap-2">
+      <Link href="/posts" className="flex items-center gap-2">
         <Sparkles className="w-6 h-6 text-primary" />
         <span className="text-2xl font-bold hidden sm:inline">PromptHub</span>
       </Link>
       <div className="flex items-center gap-2">
-        <Button
+        {/* <Button
           variant="ghost"
           size="icon"
           onClick={() => router.push("/prompts")}
           aria-label="搜索"
         >
           <Search className="w-5 h-5" />
-        </Button>
+        </Button> */}
         {/* {mounted && ( */}
         <Button
           variant="ghost"
@@ -122,15 +122,15 @@ export function NavbarAuthenticated() {
             <DropdownMenuItem asChild>
               <Link href="/me" className="flex items-center">
                 <User className="mr-2 h-4 w-4" />
-                我的提示词
+                我的
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem asChild>
+            {/* <DropdownMenuItem asChild>
               <Link href="/me/settings" className="flex items-center">
                 <Settings className="mr-2 h-4 w-4" />
                 设置
               </Link>
-            </DropdownMenuItem>
+            </DropdownMenuItem> */}
             <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={() => {

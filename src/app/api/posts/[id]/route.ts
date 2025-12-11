@@ -22,6 +22,8 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
+    const user = await getCurrentUser();
+
     const post = await prisma.post.findFirst({
       where: { id: params.id, status: "active", deletedAt: ACTIVE_SENTINEL },
       select: {
@@ -43,6 +45,14 @@ export async function GET(
       return NextResponse.json({ error: "帖子不存在" }, { status: 404 });
     }
 
+    const isLiked = user
+      ? Boolean(
+          await prisma.postLike.findUnique({
+            where: { postId_userId: { postId: post.id, userId: user.id } },
+          })
+        )
+      : false;
+
     return NextResponse.json({
       data: {
         id: post.id,
@@ -56,6 +66,7 @@ export async function GET(
         forkCount: post.forkCount,
         createdAt: post.createdAt,
         updatedAt: post.updatedAt,
+        isLiked,
       },
     });
   } catch (error) {

@@ -53,6 +53,7 @@ interface Post {
   updatedAt: string;
   images?: string[];
   videos?: string[];
+  isLiked?: boolean;
 }
 
 interface Comment {
@@ -103,14 +104,19 @@ export default function PostDetailPage() {
     try {
       setLoading(true);
       const result = await axiosClient.get(`/api/posts/${postId}`);
-      const postData = result.data;
+      const payload = result?.data ?? result;
+      const postData = payload?.data ?? payload;
+      if (!postData) {
+        throw new Error("帖子数据为空");
+      }
       const normalizedTags = Array.isArray(postData.tags)
         ? postData.tags
         : typeof postData.tags === "string"
         ? postData.tags.split(",").filter(Boolean)
         : [];
       setPost({ ...postData, tags: normalizedTags });
-      setLikeCount(postData.likeCount);
+      setLikeCount(postData.likeCount ?? 0);
+      setIsLiked(Boolean(postData.isLiked));
     } catch (error) {
       const message =
         error instanceof HttpError ? error.message : "获取帖子失败";
@@ -271,7 +277,7 @@ export default function PostDetailPage() {
                 placeholder="写下你的回复..."
                 value={replyContent}
                 onChange={(e) => setReplyContent(e.target.value)}
-                rows={3}
+                rows={1}
                 actionButtons={[
                   {
                     label: "取消",
@@ -284,9 +290,7 @@ export default function PostDetailPage() {
                   },
                   {
                     label:
-                      submittingReplyId === comment.id
-                        ? "发布中..."
-                        : "发布回复",
+                      submittingReplyId === comment.id ? "发布中..." : "发布",
                     onClick: (e) => {
                       e.preventDefault();
                       handleSubmitComment(comment.id);
@@ -382,16 +386,35 @@ export default function PostDetailPage() {
     e.preventDefault();
     e.stopPropagation();
 
+    const previousLiked = isLiked;
+    const previousCount = likeCount;
+    const nextLiked = !isLiked;
+    const delta = nextLiked ? 1 : -1;
+
+    // 乐观更新
+    setIsLiked(nextLiked);
+    setLikeCount((prev) => Math.max(0, prev + delta));
+
     try {
-      // TODO: 实现点赞API调用
-      if (isLiked) {
-        setLikeCount(likeCount - 1);
-      } else {
-        setLikeCount(likeCount + 1);
+      const result = await axiosClient.post(`/api/posts/${postId}/like`, {
+        action: nextLiked ? "increment" : "decrement",
+      });
+      const payload = result?.data ?? result;
+      const data = payload?.data ?? payload;
+
+      if (data) {
+        setIsLiked(data.isLiked ?? nextLiked);
+        setLikeCount((prev) =>
+          typeof data.likeCount === "number"
+            ? Math.max(data.likeCount, 0)
+            : Math.max(prev, 0)
+        );
       }
-      setIsLiked(!isLiked);
     } catch (error) {
-      toast.error("操作失败");
+      setIsLiked(previousLiked);
+      setLikeCount(previousCount);
+      const message = error instanceof HttpError ? error.message : "操作失败";
+      toast.error(message);
     }
   };
 
@@ -528,7 +551,7 @@ export default function PostDetailPage() {
               /* 显示完整提示词内容 */
               shouldShowContent && (
                 <div className="border border-gray-200 rounded-lg p-4 mb-4 bg-gray-50">
-                  <pre className="text-sm text-gray-700 whitespace-pre-wrap font-light">
+                  <pre className="text-sm text-gray-700 whitespace-pre-wrap font-light break-words">
                     {post.content}
                   </pre>
                 </div>
@@ -537,7 +560,7 @@ export default function PostDetailPage() {
 
             {/* 标签 */}
             {post.tags && post.tags.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-4">
+              <div className="flex flex-wrap gap-2">
                 {post.tags.map((tag, index) => (
                   <span
                     key={index}
@@ -588,7 +611,7 @@ export default function PostDetailPage() {
               placeholder="写下你的评论..."
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
-              rows={3}
+              rows={1}
               actionButtons={[
                 {
                   label: "清空",
@@ -599,6 +622,7 @@ export default function PostDetailPage() {
                 },
                 {
                   label: submittingComment ? "发布中..." : "评论",
+                  size: "sm",
                   onClick: (e) => {
                     e.preventDefault();
                     handleSubmitComment();

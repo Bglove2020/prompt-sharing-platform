@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -32,6 +32,8 @@ import { cn } from "@/lib/utils";
 
 export default function NewPromptPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const [prefillLoading, setPrefillLoading] = useState(false);
 
   const {
     register,
@@ -47,9 +49,43 @@ export default function NewPromptPage() {
       title: "",
       content: "",
       description: "",
-      type: "BACKGROUND",
+      type: "background",
     },
   });
+
+  useEffect(() => {
+    const sourcePostId = searchParams.get("sourcePostId");
+    if (!sourcePostId) return;
+
+    let mounted = true;
+    const fetchPost = async () => {
+      setPrefillLoading(true);
+      try {
+        const result = await axiosClient.get(`/api/posts/${sourcePostId}`);
+        const payload = result?.data ?? result;
+        const data = payload?.data ?? payload;
+        if (data && mounted) {
+          setValue("title", data.title ?? "");
+          setValue("description", data.description ?? "");
+          setValue("content", data.content ?? "");
+        }
+      } catch (error) {
+        const message =
+          error instanceof HttpError ? error.message : "预填充失败";
+        toast.error(message);
+      } finally {
+        if (mounted) {
+          setPrefillLoading(false);
+        }
+      }
+    };
+
+    fetchPost();
+
+    return () => {
+      mounted = false;
+    };
+  }, [searchParams, setValue]);
 
   const onSubmit = async (data: promptData) => {
     await new Promise((resolve) => setTimeout(resolve, 300));
@@ -62,7 +98,7 @@ export default function NewPromptPage() {
       });
 
       toast.success("提示词保存成功");
-      router.push(`/me`);
+      router.push(`/me?tab=prompts`);
     } catch (error) {
       const message =
         error instanceof HttpError ? error.message : "保存提示词失败";
@@ -73,9 +109,12 @@ export default function NewPromptPage() {
   return (
     <>
       {/* Main Content */}
-      <main className="container  mx-auto px-4 py-4 max-w-3xl flex-1 flex items-center justify-center">
+      <main className="container  mx-auto px-4 py-4 max-w-3xl mt-8 flex items-center justify-center">
         <div className="relative w-full">
-          <LoadingOverlay show={isSubmitting} text="正在保存提示词..." />
+          <LoadingOverlay
+            show={isSubmitting || prefillLoading}
+            text={prefillLoading ? "正在从帖子填充..." : "正在保存提示词..."}
+          />
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <Card>
               <CardHeader>
@@ -172,7 +211,14 @@ export default function NewPromptPage() {
                   </div>
 
                   {/* 提交按钮 */}
-                  <div className="flex justify-end">
+                  <div className="flex justify-end space-x-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => router.back()}
+                    >
+                      取消
+                    </Button>
                     <Button type="submit">添加</Button>
                   </div>
                 </div>

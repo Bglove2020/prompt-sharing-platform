@@ -34,6 +34,7 @@ model User {
   prompts     Prompt[]
   posts       Post[]
   comments    Comment[]
+  postLikes   PostLike[]
   // 活跃态用哨兵时间保证唯一性，软删后写入真实删除时间
   deletedAt   DateTime @default(dbgenerated("'9999-12-31 23:59:59.999'"))
 
@@ -88,6 +89,19 @@ model Post{
   tags        String
   deletedAt   DateTime @default(dbgenerated("'9999-12-31 23:59:59.999'"))
   comment Comment[]
+  likes     PostLike[]
+}
+
+model PostLike{
+  id        String   @id @default(uuid())
+  postId    String
+  userId    String
+  createdAt DateTime @default(now())
+
+  post Post @relation(fields: [postId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([postId, userId], map: "PostLike_postId_userId_key")
 }
 
 // model PostTag{

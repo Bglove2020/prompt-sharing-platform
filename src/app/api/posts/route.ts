@@ -21,6 +21,7 @@ async function getCurrentUser() {
 
 export async function GET(request: NextRequest) {
   try {
+    const user = await getCurrentUser();
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get("page") || "1", 10);
     const limit = parseInt(searchParams.get("limit") || "10", 10);
@@ -71,6 +72,15 @@ export async function GET(request: NextRequest) {
 
     const total = await prisma.post.count({ where });
 
+    let likedSet = new Set<string>();
+    if (user && posts.length > 0) {
+      const liked = await prisma.postLike.findMany({
+        where: { userId: user.id, postId: { in: posts.map((p) => p.id) } },
+        select: { postId: true },
+      });
+      likedSet = new Set(liked.map((item) => item.postId));
+    }
+
     const payload = posts.map((post) => ({
       id: post.id,
       title: post.title,
@@ -86,6 +96,7 @@ export async function GET(request: NextRequest) {
       authorId: post.authorId,
       avatar: post.author.avatar,
       name: post.author.name,
+      isLiked: likedSet.has(post.id),
     }));
 
     return NextResponse.json({
@@ -141,6 +152,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       msg: "创建成功",
       code: 200,
+      data: {
+        id: post.id,
+      },
     });
   } catch (error) {
     console.error("Error creating post:", error);

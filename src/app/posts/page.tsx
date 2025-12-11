@@ -24,6 +24,7 @@ interface Post {
   createdAt: string;
   images?: string[];
   videos?: string[];
+  isLiked?: boolean;
 }
 
 export default function PostsPage() {
@@ -60,7 +61,9 @@ export default function PostsPage() {
       }
 
       const result = await axiosClient.get(`/api/posts?${params}`);
-      setPosts(result.data);
+      const payload = result?.data ?? result;
+      const list = payload?.data ?? payload;
+      setPosts(Array.isArray(list) ? list : []);
     } catch (error) {
       const message =
         error instanceof HttpError ? error.message : "网络错误，请稍后重试";

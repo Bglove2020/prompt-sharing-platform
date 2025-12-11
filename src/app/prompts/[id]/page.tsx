@@ -111,7 +111,7 @@ export default function PromptDetailPage({
       toast.success("提示词保存成功");
       setCanChange(false);
       // 可选：刷新数据
-      router.refresh();
+      router.push(`/me`);
     } catch (error) {
       const message =
         error instanceof HttpError ? error.message : "保存提示词失败";
@@ -122,7 +122,7 @@ export default function PromptDetailPage({
   return (
     <>
       {/* Main Content */}
-      <main className="container  mx-auto px-4 py-4 max-w-3xl flex-1 flex items-center justify-center">
+      <main className="container  mx-auto px-4 py-4 max-w-3xl mt-8 flex items-center justify-center">
         <div className="relative w-full">
           <LoadingOverlay
             show={isSubmitting || isLoading}
@@ -246,10 +246,14 @@ export default function PromptDetailPage({
                   </div>
 
                   {/* 提交按钮 */}
-                  <div className="flex justify-end">
+                  <div className="flex justify-end gap-2">
+                    <Button variant="outline" onClick={() => router.back()}>
+                      取消
+                    </Button>
                     {!canChange && (
                       <Button
                         variant="outline"
+                        className="bg-primary/10 text-primary"
                         onClick={() => setCanChange(true)}
                       >
                         编辑

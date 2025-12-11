@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -32,16 +32,16 @@ import {
   type CreatePostFormData,
 } from "@/lib/validation/post";
 
+const PREFILL_KEY = "prefill-post-from-prompt";
+
 export default function NewPostPage() {
   const router = useRouter();
-  // const [isLoading, setIsLoading] = useState(false);
-  // const [error, setError] = useState("");
-  // const [isSuccess, setIsSuccess] = useState(false);
 
   const {
     register,
     handleSubmit,
     control,
+    reset,
     formState: { errors, isSubmitting },
   } = useForm<CreatePostFormData>({
     resolver: zodResolver(createPostFormSchema),
@@ -55,6 +55,27 @@ export default function NewPostPage() {
     },
   });
 
+  useEffect(() => {
+    // 从 sessionStorage 读取预填数据，避免长 URL
+    try {
+      const raw = sessionStorage.getItem(PREFILL_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as Partial<CreatePostFormData>;
+        reset({
+          title: parsed.title ?? "",
+          content: parsed.content ?? "",
+          description: parsed.description ?? "",
+          status: parsed.status ?? "active",
+          type: parsed.type === "background" ? "background" : "background",
+          tags: parsed.tags ?? "",
+        });
+        sessionStorage.removeItem(PREFILL_KEY);
+      }
+    } catch (err) {
+      console.error("读取提示词预填数据失败", err);
+    }
+  }, [reset]);
+
   const onSubmit = async (data: CreatePostFormData) => {
     await new Promise((resolve) => setTimeout(resolve, 300));
     try {
@@ -65,9 +86,9 @@ export default function NewPostPage() {
         status: data.status,
         tags: data.tags,
       });
-
+      console.log("result", result);
       toast.success("帖子创建成功");
-      // router.push(`/posts/${result.data.id}`);
+      router.push(`/me?tab=posts`);
     } catch (error) {
       const message =
         error instanceof HttpError ? error.message : "创建帖子失败";
@@ -79,16 +100,6 @@ export default function NewPostPage() {
     <>
       {/* Main Content */}
       <main className="container mx-auto px-4 py-4 max-w-3xl">
-        <div className="mb-4">
-          <Link href="/posts">
-            <div className="flex items-center gap-2 ">
-              <ArrowLeft className="w-4 h-4 text-gray-500" />
-              <span className="text-sm text-gray-500">返回广场</span>
-            </div>
-          </Link>
-          {/* <h1 className="text-3xl font-bold tracking-tight">创建新帖子</h1> */}
-        </div>
-
         <div className="relative">
           <LoadingOverlay show={isSubmitting} text="正在创建帖子..." />
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">

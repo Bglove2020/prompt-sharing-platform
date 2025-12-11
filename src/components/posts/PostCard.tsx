@@ -20,6 +20,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { formatTime } from "@/lib/time";
+import { axiosClient, HttpError } from "@/lib/axios";
+import { useRouter } from "next/navigation";
 
 interface Post {
   id: string;
@@ -38,6 +40,7 @@ interface Post {
   // 如果有图片/视频，可以添加这些字段
   images?: string[];
   videos?: string[];
+  isLiked?: boolean;
 }
 
 interface PostCardProps {
@@ -45,32 +48,55 @@ interface PostCardProps {
 }
 
 export function PostCard({ post }: PostCardProps) {
-  const [isLiked, setIsLiked] = useState(false);
-  const [likeCount, setLikeCount] = useState(post.likeCount);
-
+  const [isLiked, setIsLiked] = useState(Boolean(post.isLiked));
+  const [likeCount, setLikeCount] = useState(post.likeCount ?? 0);
+  const router = useRouter();
   const handleLike = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
-    // TODO: 实现点赞API调用
-    if (isLiked) {
-      setLikeCount(likeCount - 1);
-    } else {
-      setLikeCount(likeCount + 1);
+    const previousLiked = isLiked;
+    const previousCount = likeCount;
+    const nextLiked = !isLiked;
+    const delta = nextLiked ? 1 : -1;
+
+    setIsLiked(nextLiked);
+    setLikeCount((prev) => Math.max(0, prev + delta));
+
+    try {
+      const result = await axiosClient.post(`/api/posts/${post.id}/like`, {
+        action: nextLiked ? "increment" : "decrement",
+      });
+      const payload = result?.data ?? result;
+      const data = payload?.data ?? payload;
+
+      if (data) {
+        setIsLiked(data.isLiked ?? nextLiked);
+        setLikeCount((prev) =>
+          typeof data.likeCount === "number"
+            ? Math.max(data.likeCount, 0)
+            : Math.max(prev, 0)
+        );
+      }
+    } catch (error) {
+      setIsLiked(previousLiked);
+      setLikeCount(previousCount);
+      const message = error instanceof HttpError ? error.message : "操作失败";
+      console.error(message);
     }
-    setIsLiked(!isLiked);
   };
 
   const handleComment = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     // TODO: 打开评论框或跳转到评论区
+    router.push(`/posts/${post.id}`);
   };
 
   const handleFork = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    // TODO: 实现fork功能
+    router.push(`/prompts/new?sourcePostId=${post.id}`);
   };
 
   // 判断是否显示提示词内容
@@ -104,7 +130,7 @@ export function PostCard({ post }: PostCardProps) {
 
             {/* 用户名和时间 */}
             <div>
-              <span className="font-medium text-gray-500 text-sm">
+              <span className="font-medium text-gray-500 text-sm break-words">
                 {post.author.name}
               </span>
             </div>
@@ -175,13 +201,13 @@ export function PostCard({ post }: PostCardProps) {
         {/* 第二区域：帖子内容 */}
         <div className="px-3 pb-2">
           {/* 标题 */}
-          <div className="text-lg leading-6 font-semibold text-gray-900 mb-2">
+          <div className="text-lg leading-6 font-semibold text-gray-900 mb-2 break-words">
             {post.title}
           </div>
 
           {/* 描述 */}
           {post.description && (
-            <p className="text-gray-600 mb-2 leading-5 text-sm">
+            <p className="text-gray-600 mb-2 leading-5 text-sm break-words">
               {post.description}
             </p>
           )}
@@ -225,7 +251,7 @@ export function PostCard({ post }: PostCardProps) {
             /* 显示部分提示词内容 */
             shouldShowContent && (
               <div className="border border-gray-200 rounded-lg p-2 mb-2">
-                <pre className="text-sm text-gray-400 whitespace-pre-wrap font-light line-clamp-20">
+                <pre className="text-sm text-gray-400 whitespace-pre-wrap font-light line-clamp-20 break-words">
                   {post.content}
                 </pre>
               </div>

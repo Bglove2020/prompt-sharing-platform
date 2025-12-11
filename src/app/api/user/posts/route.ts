@@ -60,6 +60,15 @@ export async function GET(request: NextRequest) {
 
     const total = await prisma.post.count({ where });
 
+    let likedSet = new Set<string>();
+    if (posts.length > 0) {
+      const liked = await prisma.postLike.findMany({
+        where: { userId: user.id, postId: { in: posts.map((p) => p.id) } },
+        select: { postId: true },
+      });
+      likedSet = new Set(liked.map((item) => item.postId));
+    }
+
     return NextResponse.json({
       data: posts.map((post) => ({
         id: post.id,
@@ -76,6 +85,7 @@ export async function GET(request: NextRequest) {
         authorId: post.authorId,
         avatar: post.author.avatar,
         name: post.author.name,
+        isLiked: likedSet.has(post.id),
       })),
       pagination: {
         page,

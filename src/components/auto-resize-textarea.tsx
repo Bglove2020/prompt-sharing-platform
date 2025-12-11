@@ -25,7 +25,15 @@ const AutoResizeTextarea = forwardRef<
   AutoResizeTextareaProps
 >(
   (
-    { className, containerClassName, value, onChange, actionButtons, ...props },
+    {
+      className,
+      containerClassName,
+      value,
+      onChange,
+      actionButtons,
+      rows,
+      ...props
+    },
     ref
   ) => {
     const localRef = useRef<HTMLTextAreaElement | null>(null);
@@ -50,6 +58,10 @@ const AutoResizeTextarea = forwardRef<
     useEffect(() => {
       resize();
     }, [value]);
+
+    useEffect(() => {
+      resize();
+    }, []);
 
     const renderButton = (btn: ActionButton, idx: number) => {
       const isSecondary = btn.variant === "secondary";
@@ -81,15 +93,16 @@ const AutoResizeTextarea = forwardRef<
         )}
       >
         <Textarea
-          {...props}
           ref={setRefs}
           value={value}
+          rows={rows ?? 1}
           onChange={(e) => {
             resize();
             onChange?.(e);
           }}
+          {...props}
           className={cn(
-            "w-full p-1 shadow-none rounded-xl border-none focus-visible:ring-0 focus-visible:ring-offset-0 overflow-hidden resize-none",
+            "w-full min-h-[60px] p-1 shadow-none rounded-xl border-none focus-visible:ring-0 focus-visible:ring-offset-0 overflow-hidden resize-none",
             className
           )}
         />

@@ -26,7 +26,7 @@ export default function Home() {
                 立即开始 <ArrowRight className="w-4 h-4" />
               </Button>
             </Link>
-            <Link href="/prompts">
+            <Link href="/posts">
               <Button variant="outline" size="lg">
                 浏览提示词
               </Button>
