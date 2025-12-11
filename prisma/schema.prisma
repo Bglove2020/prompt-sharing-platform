@@ -62,7 +62,8 @@ model Prompt {
   // 活跃态用哨兵时间保证唯一性，软删后写入真实删除时间
   deletedAt   DateTime @default(dbgenerated("'9999-12-31 23:59:59.999'"))
 
-  @@unique([title, deletedAt], map: "Prompt_title_deletedAt_key")
+  // 同一用户下提示词标题唯一，不同用户可重复
+  @@unique([title, authorId, deletedAt], map: "Prompt_title_authorId_deletedAt_key")
 }
 
 /**

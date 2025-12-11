@@ -633,7 +633,7 @@ export default function PostDetailPage() {
               ]}
             />
 
-            <Separator />
+            {/* <Separator /> */}
 
             {/* 评论列表 */}
             {commentLoading ? (
