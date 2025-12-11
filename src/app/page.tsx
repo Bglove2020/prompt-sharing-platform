@@ -1,65 +1,118 @@
-import Image from "next/image";
+import Link from "next/link";
+import { Button } from "@/components/ui";
+import { ArrowRight, Sparkles, Users, Zap } from "lucide-react";
+import { NavbarGuest } from "@/components/layout/navbar-guest";
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted">
+      {/* Navigation */}
+      <NavbarGuest />
+
+      {/* Hero Section */}
+      <main className="container mx-auto px-6 py-10 sm:py-20">
+        <div className="text-center">
+          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight mb-6 leading-[1.3]">
+            发现、分享、创造和管理优质AI提示词
+            <br />
+            <span className="text-primary block mt-4"></span>
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="text-xl sm:text-2xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+            在任何地方快速插入您的提示词，在社区中发现更多优质提示词，提升您的工作效率
           </p>
+          <div className="flex gap-4 justify-center">
+            <Link href="/register">
+              <Button size="lg" className="gap-2">
+                立即开始 <ArrowRight className="w-4 h-4" />
+              </Button>
+            </Link>
+            <Link href="/prompts">
+              <Button variant="outline" size="lg">
+                浏览提示词
+              </Button>
+            </Link>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        {/* Features */}
+        <div className="grid md:grid-cols-3 gap-8 mt-10 sm:mt-20">
+          <div className="text-center p-6 rounded-lg bg-card border border-border text-card-foreground">
+            <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center mx-auto mb-4 dark:bg-blue-100 dark:text-blue-600">
+              <Zap className="w-6 h-6" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">浏览器扩展</h3>
+            <p className="text-muted-foreground text-sm sm:text-base">
+              支持ChatGPT、Claude、Gemini、DeepSeek等主流AI网站，一键快速插入您构建的提示词
+            </p>
+          </div>
+
+          <div className="text-center p-6 rounded-lg bg-card border border-border text-card-foreground">
+            <div className="w-12 h-12 bg-green-100 text-green-600 rounded-lg flex items-center justify-center mx-auto mb-4 dark:bg-green-100 dark:text-green-600">
+              <Users className="w-6 h-6" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">社区分享</h3>
+            <p className="text-muted-foreground text-sm sm:text-base">
+              发现优质提示词，点赞、讨论、Fork、创建自己的提示词，与社区一起成长
+            </p>
+          </div>
+
+          <div className="text-center p-6 rounded-lg bg-card border border-border text-card-foreground">
+            <div className="w-12 h-12 bg-purple-100 text-purple-600 rounded-lg flex items-center justify-center mx-auto mb-4 dark:bg-purple-100 dark:text-purple-600">
+              <Sparkles className="w-6 h-6" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">智能管理</h3>
+            <p className="text-muted-foreground text-sm sm:text-base">
+              根据不同场景，创建不同的提示词，支持变量自定义，版本历史追踪
+            </p>
+          </div>
+        </div>
+
+        {/* CTA Section */}
+        <div className="text-center mt-10 sm:mt-20 p-12 bg-muted rounded-2xl shadow-md">
+          <h2 className="text-3xl font-bold mb-4">
+            准备好提升您的AI体验了吗？
+          </h2>
+          <p className="text-muted-foreground mb-6">
+            加入社区，发现提示词的无限可能
+          </p>
+          <Link href="/register">
+            <Button size="lg" className="gap-2">
+              立即注册 <ArrowRight className="w-4 h-4" />
+            </Button>
+          </Link>
         </div>
       </main>
+
+      {/* Footer */}
+      <footer className="border-t border-border mt-5 sm:mt-10">
+        <div className="container mx-auto px-6 py-8">
+          <div className="flex justify-between items-center">
+            <div className="text-sm text-muted-foreground">
+              © 2024 PromptHub. All rights reserved.
+            </div>
+            <div className="flex gap-6">
+              <Link
+                href="/about"
+                className="text-sm text-muted-foreground hover:text-foreground"
+              >
+                关于我们
+              </Link>
+              <Link
+                href="/privacy"
+                className="text-sm text-muted-foreground hover:text-foreground"
+              >
+                隐私政策
+              </Link>
+              <Link
+                href="/terms"
+                className="text-sm text-muted-foreground hover:text-foreground"
+              >
+                服务条款
+              </Link>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

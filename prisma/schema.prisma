@@ -1,0 +1,132 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+/**
+ * 字段值统一
+ * status：active、inactive、hidden
+ */
+
+
+
+model User {
+  id          String   @id @default(uuid())
+  name        String
+  email       String   
+  phone       String?  
+  password    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  role        String?  @default("user")
+  avatar      String?
+  status      String   @default("ACTIVE")
+  prompts     Prompt[]
+  posts       Post[]
+  comments    Comment[]
+  // 活跃态用哨兵时间保证唯一性，软删后写入真实删除时间
+  deletedAt   DateTime @default(dbgenerated("'9999-12-31 23:59:59.999'"))
+
+  @@unique([email, deletedAt], map: "User_email_deletedAt_key")
+  @@unique([phone, deletedAt], map: "User_phone_deletedAt_key")
+}
+
+/**
+ * 提示词表
+ * 用户可以创建一个提示词，也可以修改自己的提示词。
+ * 提示词并不可以被点赞，被评论。但是用户可以选择自己某个提示词进行分享，进行此操作时，自动把提示词的title、description、content字段复制到帖子中，用户可以选择改或者不改。
+ * 提示词是不公开的，只有用户自己可以看到，并不会展示在提示词广场上。
+ * 提示词没有标签划分
+ */
+model Prompt {
+  id          String   @id @default(uuid())
+  title       String
+  content     String
+  description String?
+  type        String   @default("BACKGROUND")
+  authorId    String   
+  author      User     @relation(fields: [authorId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  // 活跃态用哨兵时间保证唯一性，软删后写入真实删除时间
+  deletedAt   DateTime @default(dbgenerated("'9999-12-31 23:59:59.999'"))
+
+  @@unique([title, deletedAt], map: "Prompt_title_deletedAt_key")
+}
+
+/**
+ * 帖子表
+ * 用户可以直接发一个帖子，来分享一个提示词，也可以在自己的提示词中选择一个进行分享
+ * 用自己的提示词生成分享帖子时，帖子的content字段就是自己的提示词的content字段。注意：从某个提示词可以生成帖子，但是生成的帖子中的内容并不和这个提示词绑定，后期修改提示词也不会影响已生成的帖子。
+ * 帖子在提示词广场上被所有人看到，分类可以有多个帖子，帖子可以有多个分类
+ * 帖子可以被点赞，被评论，被fork。被fork是生成了一个提示词到另一个用户的提示词库中，会默认把title、description、content字段复制过去，用户可以选择改或者不改。
+ */
+model Post{
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  content    String
+  authorId    String
+  author      User     @relation(fields: [authorId], references: [id])
+  likeCount   Int      @default(0)
+  commentCount  Int     @default(0)
+  forkCount   Int      @default(0) // 复制数量
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  status      String   @default("active")
+  type        String   @default("background")
+  tags        String
+  deletedAt   DateTime @default(dbgenerated("'9999-12-31 23:59:59.999'"))
+  comment Comment[]
+}
+
+// model PostTag{
+//   id          String   @id @default(uuid())
+//   name        String
+//   createdAt   DateTime @default(now())
+//   updatedAt   DateTime @updatedAt
+//   deletedAt   DateTime @default(dbgenerated("'9999-12-31 23:59:59.999'"))
+//   postRelation PostTagRelation[]
+//   @@unique([name, deletedAt], map: "PostTag_name_deletedAt_key")
+// }
+
+// model PostTagRelation{
+//   id          String   @id @default(uuid())
+//   postId      String
+//   post      Post     @relation(fields: [postId], references: [id])
+//   tagId       String
+//   tag      PostTag     @relation(fields: [tagId], references: [id])
+//   createdAt   DateTime @default(now())
+//   updatedAt   DateTime @updatedAt
+//   deletedAt   DateTime @default(dbgenerated("'9999-12-31 23:59:59.999'"))
+
+//   @@unique([postId, tagId, deletedAt], map: "PostTagRelation_postId_tagId_deletedAt_key")
+// }
+
+
+model Comment{
+  id          String   @id @default(uuid())
+  content     String
+  authorId    String
+  author      User     @relation(fields: [authorId], references: [id])
+  postId      String
+  post      Post     @relation(fields: [postId], references: [id])
+  parentCommentId String?
+  // 祖先评论id数组字符串，0则表示是根评论
+  ancestorCommentId String?
+  likeCount   Int      @default(0)
+  replyCount  Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime @default(dbgenerated("'9999-12-31 23:59:59.999'"))
+}
