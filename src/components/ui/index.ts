@@ -25,6 +25,18 @@ export { Popover, PopoverTrigger, PopoverContent } from "./popover";
 export { LoadingOverlay } from "./loading-overlay";
 export { Avatar, AvatarImage, AvatarFallback } from "./avatar";
 export {
+  Dialog,
+  DialogPortal,
+  DialogOverlay,
+  DialogTrigger,
+  DialogClose,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
+} from "./dialog";
+export {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,

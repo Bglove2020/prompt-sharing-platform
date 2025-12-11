@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { Button } from "@/components/ui";
@@ -14,6 +14,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Moon,
   Sun,
   Sparkles,
@@ -22,16 +30,24 @@ import {
   User,
   LogOut,
   Settings,
+  Loader2,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
+import { Input, Label } from "@/components/ui";
+import { toast } from "sonner";
+import { axiosClient } from "@/lib/axios";
 
 export function NavbarAuthenticated() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mounted, setMounted] = useState(false);
   const { theme, setTheme } = useTheme();
-  const { data: session } = useSession();
+  const { data: session, update } = useSession();
   const router = useRouter();
+  const [avatarOpen, setAvatarOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   console.log("navbar authenticated session", session);
   useEffect(() => {
@@ -52,6 +68,79 @@ export function NavbarAuthenticated() {
     : session?.user?.email
     ? session.user.email.charAt(0).toUpperCase()
     : "U";
+
+  const currentAvatar = useMemo(
+    () => previewUrl || session?.user?.avatar || "",
+    [previewUrl, session?.user?.avatar]
+  );
+
+  const handleFileChange = (file?: File) => {
+    if (!file) return;
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      toast.error("仅支持 jpeg/png/webp");
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("图片不能超过 2MB");
+      return;
+    }
+    setSelectedFile(file);
+    setPreviewUrl(URL.createObjectURL(file));
+  };
+
+  const handleUpload = async () => {
+    if (!selectedFile) {
+      toast.error("请先选择图片");
+      return;
+    }
+    setUploading(true);
+    try {
+      type PresignResp = {
+        uploadUrl: string;
+        avatarUrl: string;
+        headers?: Record<string, string>;
+      };
+
+      const presign = (await axiosClient.post<PresignResp>(
+        "/api/upload/avatar/presign",
+        {
+          filename: selectedFile.name,
+          mimeType: selectedFile.type,
+          size: selectedFile.size,
+        }
+      )) as unknown as PresignResp;
+
+      const uploadHeaders: Record<string, string> =
+        presign.headers && typeof presign.headers === "object"
+          ? (presign.headers as Record<string, string>)
+          : { "Content-Type": selectedFile.type };
+
+      await fetch(presign.uploadUrl, {
+        method: "PUT",
+        headers: uploadHeaders,
+        body: selectedFile,
+      });
+
+      await axiosClient.patch("/api/user/avatar", {
+        avatarUrl: presign.avatarUrl,
+      });
+
+      // 更新 session 中的 avatar（注意结构需带 user）
+      await update?.({ user: { avatar: presign.avatarUrl } });
+      toast.success("头像更新成功");
+      setAvatarOpen(false);
+      setSelectedFile(null);
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+        setPreviewUrl(null);
+      }
+      router.refresh();
+    } catch (error: any) {
+      toast.error(error?.message || "上传失败");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   return (
     <nav
@@ -125,6 +214,15 @@ export function NavbarAuthenticated() {
                 我的
               </Link>
             </DropdownMenuItem>
+            <DropdownMenuItem
+              onSelect={(e) => {
+                e.preventDefault();
+                setAvatarOpen(true);
+              }}
+            >
+              <User className="mr-2 h-4 w-4" />
+              更换头像
+            </DropdownMenuItem>
             {/* <DropdownMenuItem asChild>
               <Link href="/me/settings" className="flex items-center">
                 <Settings className="mr-2 h-4 w-4" />
@@ -144,6 +242,64 @@ export function NavbarAuthenticated() {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      <Dialog
+        open={avatarOpen}
+        onOpenChange={(open) => {
+          if (!open && previewUrl) {
+            URL.revokeObjectURL(previewUrl);
+            setPreviewUrl(null);
+            setSelectedFile(null);
+          }
+          setAvatarOpen(open);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>更换头像</DialogTitle>
+            <DialogDescription>
+              仅支持 jpeg/png/webp，最大 2MB。
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center gap-4">
+            <Avatar className="h-16 w-16">
+              {currentAvatar ? (
+                <AvatarImage src={currentAvatar} alt="新头像预览" />
+              ) : (
+                <AvatarFallback>{userInitials}</AvatarFallback>
+              )}
+            </Avatar>
+            <div className="flex-1 space-y-2">
+              <Label htmlFor="avatar-upload">选择图片</Label>
+              <Input
+                id="avatar-upload"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={(e) => handleFileChange(e.target.files?.[0])}
+              />
+            </div>
+          </div>
+          <DialogFooter className="mt-4">
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (previewUrl) {
+                  URL.revokeObjectURL(previewUrl);
+                  setPreviewUrl(null);
+                }
+                setSelectedFile(null);
+                setAvatarOpen(false);
+              }}
+            >
+              取消
+            </Button>
+            <Button onClick={handleUpload} disabled={uploading}>
+              {uploading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {uploading ? "上传中..." : "上传并保存"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </nav>
   );
 }

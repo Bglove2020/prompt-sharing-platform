@@ -66,10 +66,21 @@ export const authOptions: NextAuthOptions = {
     // }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session: updatedSession }) {
       if (user) {
         token.id = user.id;
       }
+
+      // 主动更新（如前端 update 调用）时，写回新的 avatar
+      if (trigger === "update" && updatedSession?.user) {
+        if (updatedSession.user.avatar !== undefined) {
+          token.avatar = updatedSession.user.avatar;
+        }
+        if (updatedSession.user.name !== undefined) {
+          token.name = updatedSession.user.name;
+        }
+      }
+
       // 补充用户角色、头像等信息，确保 session 接口返回完整字段
       if (
         token.id &&
