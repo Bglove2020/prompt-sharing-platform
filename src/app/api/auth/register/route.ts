@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { z } from "zod";
+import { z, ZodError } from "zod";
 import { registerSchema } from "@/lib/validation/auth";
 import prisma from "@/lib/prisma";
 import { ACTIVE_SENTINEL } from "@/lib/constants";
@@ -81,8 +81,11 @@ export async function POST(request: NextRequest) {
       user,
     });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.message }, { status: 400 });
+    if (error instanceof ZodError) {
+      return NextResponse.json(
+        { error: error.issues[0]?.message || "参数不合法" },
+        { status: 400 }
+      );
     }
 
     console.error("Register error:", error);
