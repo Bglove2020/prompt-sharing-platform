@@ -90,9 +90,7 @@ export default function NewPostPage() {
       toast.success("帖子创建成功");
       router.push(`/me?tab=posts`);
     } catch (error) {
-      const message =
-        error instanceof HttpError ? error.message : "创建帖子失败";
-      toast.error(message);
+      // 错误已在拦截器中统一处理并显示 toast
     }
   };
 

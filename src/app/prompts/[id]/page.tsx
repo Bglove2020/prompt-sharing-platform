@@ -83,7 +83,7 @@ export default function PromptDetailPage({
       })
       .catch((error) => {
         console.error("获取提示词失败:", error);
-        toast.error("获取提示词失败");
+        // 错误已在拦截器中统一处理并显示 toast
       })
       .finally(() => {
         setTimeout(() => {
@@ -113,9 +113,7 @@ export default function PromptDetailPage({
       // 可选：刷新数据
       router.push(`/me`);
     } catch (error) {
-      const message =
-        error instanceof HttpError ? error.message : "保存提示词失败";
-      toast.error(message);
+      // 错误已在拦截器中统一处理并显示 toast
     }
   };
 

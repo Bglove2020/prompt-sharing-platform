@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -30,7 +30,7 @@ import { toast } from "sonner";
 import { promptSchema, type promptData } from "@/lib/validation/prompt";
 import { cn } from "@/lib/utils";
 
-export default function NewPromptPage() {
+function NewPromptForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [prefillLoading, setPrefillLoading] = useState(false);
@@ -70,9 +70,7 @@ export default function NewPromptPage() {
           setValue("content", data.content ?? "");
         }
       } catch (error) {
-        const message =
-          error instanceof HttpError ? error.message : "预填充失败";
-        toast.error(message);
+        // 错误已在拦截器中统一处理并显示 toast
       } finally {
         if (mounted) {
           setPrefillLoading(false);
@@ -100,9 +98,7 @@ export default function NewPromptPage() {
       toast.success("提示词保存成功");
       router.push(`/me?tab=prompts`);
     } catch (error) {
-      const message =
-        error instanceof HttpError ? error.message : "保存提示词失败";
-      toast.error(message);
+      // 错误已在拦截器中统一处理并显示 toast
     }
   };
 
@@ -228,5 +224,26 @@ export default function NewPromptPage() {
         </div>
       </main>
     </>
+  );
+}
+
+export default function NewPromptPage() {
+  return (
+    <Suspense fallback={
+      <main className="container mx-auto px-4 py-4 max-w-3xl mt-8 flex items-center justify-center">
+        <div className="relative w-full">
+          <Card>
+            <CardHeader>
+              <CardTitle>提示词</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center text-muted-foreground">加载中...</div>
+            </CardContent>
+          </Card>
+        </div>
+      </main>
+    }>
+      <NewPromptForm />
+    </Suspense>
   );
 }

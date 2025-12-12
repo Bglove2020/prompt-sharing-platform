@@ -20,9 +20,9 @@ import { loginSchema, type LoginFormData } from "@/lib/validation/auth";
 import { toast } from "sonner";
 import { NavbarGuest } from "@/components/layout/navbar-guest";
 import { signIn } from "next-auth/react";
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -91,9 +91,9 @@ export default function LoginPage() {
       router.push(callbackUrl);
       router.refresh();
     } catch (error) {
+      // 错误已在拦截器中统一处理并显示 toast
       const message =
         error instanceof HttpError ? error.message : "网络错误，请稍后重试";
-      toast.error(message);
       setError("root", {
         type: "server",
         message,
@@ -189,5 +189,34 @@ export default function LoginPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="h-screen bg-background flex flex-col">
+          <NavbarGuest />
+          <div className="flex items-center justify-center px-6 flex-1">
+            <Card className="relative w-full max-w-md overflow-hidden">
+              <CardHeader className="space-y-1">
+                <CardTitle className="text-2xl text-center">登录</CardTitle>
+                <CardDescription className="text-center">
+                  使用您的账号登录 PromptHub
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center text-muted-foreground">
+                  加载中...
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      }
+    >
+      <LoginForm />
+    </Suspense>
   );
 }

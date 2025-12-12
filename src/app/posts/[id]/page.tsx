@@ -118,9 +118,7 @@ export default function PostDetailPage() {
       setLikeCount(postData.likeCount ?? 0);
       setIsLiked(Boolean(postData.isLiked));
     } catch (error) {
-      const message =
-        error instanceof HttpError ? error.message : "获取帖子失败";
-      toast.error(message);
+      // 错误已在拦截器中统一处理并显示 toast
       router.push("/posts");
     } finally {
       setLoading(false);
@@ -133,9 +131,7 @@ export default function PostDetailPage() {
       const result = await axiosClient.get(`/api/posts/${postId}/comments`);
       setComments(result.data);
     } catch (error) {
-      const message =
-        error instanceof HttpError ? error.message : "获取评论失败";
-      toast.error(message);
+      // 错误已在拦截器中统一处理并显示 toast
     } finally {
       setCommentLoading(false);
     }
@@ -176,9 +172,7 @@ export default function PostDetailPage() {
       }));
       setExpandedReplies((prev) => new Set(prev).add(fullPath));
     } catch (error) {
-      const message =
-        error instanceof HttpError ? error.message : "获取回复失败";
-      toast.error(message);
+      // 错误已在拦截器中统一处理并显示 toast
     } finally {
       setReplyLoading((prev) => {
         const next = new Set(prev);
@@ -201,10 +195,7 @@ export default function PostDetailPage() {
     const indentLevel = Math.min(depth, 5); // 限制最大缩进层级，避免过度缩进
 
     return (
-      <div
-        key={comment.id}
-        className="space-y-3 border-l-2 border-border pl-2"
-      >
+      <div key={comment.id} className="space-y-3 border-l-2 border-border pl-2">
         <div className="flex gap-0 flex-col">
           <div className="flex gap-3">
             <Avatar className="w-7 h-7 flex-shrink-0">
@@ -371,8 +362,7 @@ export default function PostDetailPage() {
         setPost({ ...post, commentCount: post.commentCount + 1 });
       }
     } catch (error) {
-      const message = error instanceof HttpError ? error.message : "发布失败";
-      toast.error(message);
+      // 错误已在拦截器中统一处理并显示 toast
     } finally {
       if (parentCommentId) {
         setSubmittingReplyId(null);
@@ -404,17 +394,14 @@ export default function PostDetailPage() {
 
       if (data) {
         setIsLiked(data.isLiked ?? nextLiked);
-        setLikeCount((prev) =>
-          typeof data.likeCount === "number"
-            ? Math.max(data.likeCount, 0)
-            : Math.max(prev, 0)
-        );
+        if (typeof data.likeCount === "number") {
+          setLikeCount(Math.max(data.likeCount, 0));
+        }
       }
     } catch (error) {
       setIsLiked(previousLiked);
       setLikeCount(previousCount);
-      const message = error instanceof HttpError ? error.message : "操作失败";
-      toast.error(message);
+      // 错误已在拦截器中统一处理并显示 toast
     }
   };
 
@@ -582,7 +569,9 @@ export default function PostDetailPage() {
               <button
                 onClick={handleLike}
                 className={`flex items-center space-x-1 transition-colors ${
-                  isLiked ? "text-destructive" : "text-muted-foreground hover:text-destructive"
+                  isLiked
+                    ? "text-destructive"
+                    : "text-muted-foreground hover:text-destructive"
                 }`}
               >
                 <Heart className={`w-5 h-5 ${isLiked ? "fill-current" : ""}`} />

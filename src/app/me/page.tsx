@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage, Button } from "@/components/ui";
 import {
@@ -38,7 +38,7 @@ interface Post {
   isLiked?: boolean;
 }
 
-export default function MyPage() {
+function MyPageContent() {
   const searchParams = useSearchParams();
   const initialTabParam =
     searchParams.get("tab") || searchParams.get("view") || "prompts";
@@ -232,5 +232,20 @@ export default function MyPage() {
         )}
       </main>
     </div>
+  );
+}
+
+export default function MyPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-background">
+        <NavbarAuthenticated />
+        <main className="container mx-auto px-4 py-4">
+          <p className="text-center text-muted-foreground py-8">加载中...</p>
+        </main>
+      </div>
+    }>
+      <MyPageContent />
+    </Suspense>
   );
 }

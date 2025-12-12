@@ -4,6 +4,9 @@ import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { ACTIVE_SENTINEL } from "@/lib/constants";
 
+// 标记为动态路由，因为使用了 getServerSession (内部使用 headers)
+export const dynamic = "force-dynamic";
+
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -60,15 +63,6 @@ export async function GET(request: NextRequest) {
 
     const total = await prisma.post.count({ where });
 
-    let likedSet = new Set<string>();
-    if (posts.length > 0) {
-      const liked = await prisma.postLike.findMany({
-        where: { userId: user.id, postId: { in: posts.map((p) => p.id) } },
-        select: { postId: true },
-      });
-      likedSet = new Set(liked.map((item) => item.postId));
-    }
-
     return NextResponse.json({
       data: posts.map((post) => ({
         id: post.id,
@@ -85,7 +79,6 @@ export async function GET(request: NextRequest) {
         authorId: post.authorId,
         avatar: post.author.avatar,
         name: post.author.name,
-        isLiked: likedSet.has(post.id),
       })),
       pagination: {
         page,

@@ -72,11 +72,9 @@ export function PostCard({ post }: PostCardProps) {
 
       if (data) {
         setIsLiked(data.isLiked ?? nextLiked);
-        setLikeCount((prev) =>
-          typeof data.likeCount === "number"
-            ? Math.max(data.likeCount, 0)
-            : Math.max(prev, 0)
-        );
+        if (typeof data.likeCount === "number") {
+          setLikeCount(Math.max(data.likeCount, 0));
+        }
       }
     } catch (error) {
       setIsLiked(previousLiked);

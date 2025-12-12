@@ -54,9 +54,9 @@ export default function RegisterPage() {
       toast.success("注册成功，请登录");
       router.push("/login");
     } catch (error) {
+      // 错误已在拦截器中统一处理并显示 toast
       const message =
         error instanceof HttpError ? error.message : "网络错误，请稍后重试";
-      toast.error(message);
       setError("root", {
         type: "server",
         message,

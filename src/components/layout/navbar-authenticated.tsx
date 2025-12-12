@@ -136,7 +136,7 @@ export function NavbarAuthenticated() {
       }
       router.refresh();
     } catch (error: any) {
-      toast.error(error?.message || "上传失败");
+      // 错误已在拦截器中统一处理并显示 toast
     } finally {
       setUploading(false);
     }

@@ -4,6 +4,9 @@ import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { ACTIVE_SENTINEL } from "@/lib/constants";
 
+// 标记为动态路由，因为使用了 getServerSession (内部使用 headers)
+export const dynamic = "force-dynamic";
+
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
