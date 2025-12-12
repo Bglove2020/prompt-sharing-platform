@@ -72,7 +72,7 @@ const AutoResizeTextarea = forwardRef<
           variant={isSecondary ? "secondary" : "default"}
           className={cn(
             isSecondary
-              ? "rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300"
+              ? "rounded-full bg-secondary text-secondary-foreground hover:bg-secondary/80"
               : "rounded-full px-4",
             btn.className
           )}
@@ -88,7 +88,7 @@ const AutoResizeTextarea = forwardRef<
     return (
       <div
         className={cn(
-          "flex flex-col items-end gap-1 border border-gray-200 rounded-xl p-2",
+          "flex flex-col items-end gap-1 border border-border rounded-xl p-2",
           containerClassName
         )}
       >

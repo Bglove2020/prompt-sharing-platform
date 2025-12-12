@@ -154,7 +154,7 @@ export default function LoginPage() {
                 </div>
               )}
               {searchParams.get("message") && (
-                <div className="text-sm text-green-600 text-center">
+                <div className="text-sm text-primary text-center">
                   {searchParams.get("message")}
                 </div>
               )}

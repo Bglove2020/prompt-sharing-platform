@@ -203,7 +203,7 @@ export default function PostDetailPage() {
     return (
       <div
         key={comment.id}
-        className="space-y-3 border-l-2 border-gray-100 pl-2"
+        className="space-y-3 border-l-2 border-border pl-2"
       >
         <div className="flex gap-0 flex-col">
           <div className="flex gap-3">
@@ -218,14 +218,14 @@ export default function PostDetailPage() {
             </Avatar>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
-                <span className="font-medium text-sm text-gray-900 break-words">
+                <span className="font-medium text-sm text-foreground break-words">
                   {comment.author.name}
                 </span>
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-muted-foreground">
                   {formatTime(comment.createdAt)}
                 </span>
               </div>
-              <p className="text-sm text-gray-700 whitespace-pre-wrap break-words">
+              <p className="text-sm text-muted-foreground whitespace-pre-wrap break-words">
                 {comment.content}
               </p>
               <div className="flex items-center gap-4 mt-2">
@@ -238,14 +238,14 @@ export default function PostDetailPage() {
                       setReplyContent("");
                     }
                   }}
-                  className="text-xs text-gray-500 hover:text-blue-500 transition-colors"
+                  className="text-xs text-muted-foreground hover:text-primary transition-colors"
                 >
                   回复
                 </button>
                 {hasReplies && (
                   <button
                     onClick={() => fetchReplies(comment.id, parentPath)}
-                    className="text-xs text-gray-500 hover:text-blue-500 transition-colors flex items-center gap-1"
+                    className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1"
                     disabled={replyLoading.has(currentPath)}
                   >
                     {isExpanded ? (
@@ -453,16 +453,16 @@ export default function PostDetailPage() {
                 ) : null}
                 <AvatarFallback>{post.author.name.charAt(0)}</AvatarFallback>
               </Avatar>
-              <span className="font-medium text-gray-700 text-sm">
+              <span className="font-medium text-foreground text-sm">
                 {post.author.name}
               </span>
               <span
-                className="text-gray-500 text-lg font-semibold select-none"
+                className="text-muted-foreground text-lg font-semibold select-none"
                 aria-hidden="true"
               >
                 ·
               </span>
-              <span className="text-sm text-gray-500">
+              <span className="text-sm text-muted-foreground">
                 {formatTime(post.createdAt)}
               </span>
             </div>
@@ -501,13 +501,13 @@ export default function PostDetailPage() {
           {/* 第二区域：帖子内容 */}
           <div className="px-6 pb-4">
             {/* 标题 */}
-            <div className="text-2xl leading-7 font-semibold text-gray-900 mb-3 break-words">
+            <div className="text-2xl leading-7 font-semibold text-foreground mb-3 break-words">
               {post.title}
             </div>
 
             {/* 描述 */}
             {post.description && (
-              <p className="text-gray-600 mb-3 leading-6 text-base break-words">
+              <p className="text-muted-foreground mb-3 leading-6 text-base break-words">
                 {post.description}
               </p>
             )}
@@ -520,7 +520,7 @@ export default function PostDetailPage() {
                     {post.images.map((image, index) => (
                       <div
                         key={index}
-                        className="relative aspect-video rounded-lg overflow-hidden bg-gray-100"
+                        className="relative aspect-video rounded-lg overflow-hidden bg-muted"
                       >
                         <Image
                           src={image}
@@ -550,8 +550,8 @@ export default function PostDetailPage() {
             ) : (
               /* 显示完整提示词内容 */
               shouldShowContent && (
-                <div className="border border-gray-200 rounded-lg p-4 mb-4 bg-gray-50">
-                  <pre className="text-sm text-gray-700 whitespace-pre-wrap font-light break-words">
+                <div className="border border-border rounded-lg p-4 mb-4 bg-muted">
+                  <pre className="text-sm text-foreground whitespace-pre-wrap font-light break-words">
                     {post.content}
                   </pre>
                 </div>
@@ -564,7 +564,7 @@ export default function PostDetailPage() {
                 {post.tags.map((tag, index) => (
                   <span
                     key={index}
-                    className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded"
+                    className="px-2 py-1 text-xs bg-secondary text-secondary-foreground rounded"
                   >
                     {tag}
                   </span>
@@ -582,7 +582,7 @@ export default function PostDetailPage() {
               <button
                 onClick={handleLike}
                 className={`flex items-center space-x-1 transition-colors ${
-                  isLiked ? "text-red-500" : "text-gray-500 hover:text-red-500"
+                  isLiked ? "text-destructive" : "text-muted-foreground hover:text-destructive"
                 }`}
               >
                 <Heart className={`w-5 h-5 ${isLiked ? "fill-current" : ""}`} />
@@ -590,13 +590,13 @@ export default function PostDetailPage() {
               </button>
 
               {/* 评论按钮 */}
-              <button className="flex items-center space-x-1 text-gray-500 hover:text-blue-500 transition-colors">
+              <button className="flex items-center space-x-1 text-muted-foreground hover:text-primary transition-colors">
                 <MessageCircle className="w-5 h-5" />
                 <span className="text-sm font-medium">{post.commentCount}</span>
               </button>
 
               {/* Fork按钮 */}
-              <button className="flex items-center space-x-1 text-gray-500 hover:text-green-500 transition-colors">
+              <button className="flex items-center space-x-1 text-muted-foreground hover:text-accent-foreground transition-colors">
                 <Copy className="w-5 h-5" />
                 <span className="text-sm font-medium">{post.forkCount}</span>
               </button>
@@ -645,7 +645,7 @@ export default function PostDetailPage() {
                 ))}
               </div>
             ) : comments.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-muted-foreground">
                 暂无评论，快来发表第一条评论吧！
               </div>
             ) : (

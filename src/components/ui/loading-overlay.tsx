@@ -18,7 +18,7 @@ export function LoadingOverlay({ show, text }: LoadingOverlayProps) {
       role="status"
     >
       <div className="flex items-center gap-2 text-primary">
-        <Loader2 className="h-7 w-7 animate-spin text-blue-500" />
+        <Loader2 className="h-7 w-7 animate-spin text-primary" />
         {text ? (
           <span className="text-base font-medium text-muted-foreground">
             {text}

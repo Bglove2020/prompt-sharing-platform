@@ -105,12 +105,12 @@ export function PostCard({ post }: PostCardProps) {
 
   return (
     <Link href={`/posts/${post.id}`} className="block">
-      <div className="bg-white rounded-lg border border-gray-200 hover:shadow-md transition-shadow cursor-pointer overflow-hidden">
+      <div className="bg-card rounded-lg border border-border hover:shadow-md transition-shadow cursor-pointer overflow-hidden">
         {/* 第一区域：用户信息 */}
         <div className="flex items-center justify-between px-3 pt-2 pb-1">
           <div className="flex items-center space-x-2">
             {/* 用户头像 */}
-            <div className="w-6 h-6 rounded-full bg-gray-200 overflow-hidden">
+            <div className="w-6 h-6 rounded-full bg-muted overflow-hidden">
               {post.author.avatar ? (
                 <Image
                   src={post.author.avatar}
@@ -120,8 +120,8 @@ export function PostCard({ post }: PostCardProps) {
                   className="object-cover"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center bg-gray-300">
-                  <span className="text-gray-600 text-xs">
+                <div className="w-full h-full flex items-center justify-center bg-secondary">
+                  <span className="text-muted-foreground text-xs">
                     {post.author.name.charAt(0)}
                   </span>
                 </div>
@@ -130,18 +130,18 @@ export function PostCard({ post }: PostCardProps) {
 
             {/* 用户名和时间 */}
             <div>
-              <span className="font-medium text-gray-500 text-sm break-words">
+              <span className="font-medium text-muted-foreground text-sm break-words">
                 {post.author.name}
               </span>
             </div>
             <span
-              className="text-gray-500 text-lg font-semibold select-none"
+              className="text-muted-foreground text-lg font-semibold select-none"
               aria-hidden="true"
             >
               ·
             </span>
             <div className="flex items-center space-x-2">
-              <span className="text-sm text-gray-500">
+              <span className="text-sm text-muted-foreground">
                 {formatTime(post.createdAt)}
               </span>
             </div>
@@ -201,13 +201,13 @@ export function PostCard({ post }: PostCardProps) {
         {/* 第二区域：帖子内容 */}
         <div className="px-3 pb-2">
           {/* 标题 */}
-          <div className="text-lg leading-6 font-semibold text-gray-900 mb-2 break-words">
+          <div className="text-lg leading-6 font-semibold text-foreground mb-2 break-words">
             {post.title}
           </div>
 
           {/* 描述 */}
           {post.description && (
-            <p className="text-gray-600 mb-2 leading-5 text-sm break-words">
+            <p className="text-muted-foreground mb-2 leading-5 text-sm break-words">
               {post.description}
             </p>
           )}
@@ -220,7 +220,7 @@ export function PostCard({ post }: PostCardProps) {
                   {post.images.slice(0, 4).map((image, index) => (
                     <div
                       key={index}
-                      className="relative aspect-video rounded-lg overflow-hidden bg-gray-100"
+                      className="relative aspect-video rounded-lg overflow-hidden bg-muted"
                     >
                       <Image
                         src={image}
@@ -250,8 +250,8 @@ export function PostCard({ post }: PostCardProps) {
           ) : (
             /* 显示部分提示词内容 */
             shouldShowContent && (
-              <div className="border border-gray-200 rounded-lg p-2 mb-2">
-                <pre className="text-sm text-gray-400 whitespace-pre-wrap font-light line-clamp-20 break-words">
+              <div className="border border-border rounded-lg p-2 mb-2">
+                <pre className="text-sm text-muted-foreground whitespace-pre-wrap font-light line-clamp-20 break-words">
                   {post.content}
                 </pre>
               </div>
@@ -260,13 +260,13 @@ export function PostCard({ post }: PostCardProps) {
         </div>
 
         {/* 第三区域：操作按钮 */}
-        <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
+        <div className="flex items-center justify-between px-4 py-3 border-t border-border">
           <div className="flex items-center space-x-6">
             {/* 点赞按钮 */}
             <button
               onClick={handleLike}
               className={`flex items-center space-x-1 transition-colors ${
-                isLiked ? "text-red-500" : "text-gray-500 hover:text-red-500"
+                isLiked ? "text-destructive" : "text-muted-foreground hover:text-destructive"
               }`}
             >
               <Heart className={`w-5 h-5 ${isLiked ? "fill-current" : ""}`} />
@@ -276,7 +276,7 @@ export function PostCard({ post }: PostCardProps) {
             {/* 评论按钮 */}
             <button
               onClick={handleComment}
-              className="flex items-center space-x-1 text-gray-500 hover:text-blue-500 transition-colors"
+              className="flex items-center space-x-1 text-muted-foreground hover:text-primary transition-colors"
             >
               <MessageCircle className="w-5 h-5" />
               <span className="text-sm font-medium">{post.commentCount}</span>
@@ -285,7 +285,7 @@ export function PostCard({ post }: PostCardProps) {
             {/* Fork按钮 */}
             <button
               onClick={handleFork}
-              className="flex items-center space-x-1 text-gray-500 hover:text-green-500 transition-colors"
+              className="flex items-center space-x-1 text-muted-foreground hover:text-accent-foreground transition-colors"
             >
               <Copy className="w-5 h-5" />
               <span className="text-sm font-medium">{post.forkCount}</span>

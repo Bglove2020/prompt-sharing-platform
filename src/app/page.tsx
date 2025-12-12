@@ -37,7 +37,7 @@ export default function Home() {
         {/* Features */}
         <div className="grid md:grid-cols-3 gap-8 mt-10 sm:mt-20">
           <div className="text-center p-6 rounded-lg bg-card border border-border text-card-foreground">
-            <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center mx-auto mb-4 dark:bg-blue-100 dark:text-blue-600">
+            <div className="w-12 h-12 bg-primary/10 text-primary rounded-lg flex items-center justify-center mx-auto mb-4">
               <Zap className="w-6 h-6" />
             </div>
             <h3 className="text-lg font-semibold mb-2">浏览器扩展</h3>
@@ -47,7 +47,7 @@ export default function Home() {
           </div>
 
           <div className="text-center p-6 rounded-lg bg-card border border-border text-card-foreground">
-            <div className="w-12 h-12 bg-green-100 text-green-600 rounded-lg flex items-center justify-center mx-auto mb-4 dark:bg-green-100 dark:text-green-600">
+            <div className="w-12 h-12 bg-accent/10 text-accent-foreground rounded-lg flex items-center justify-center mx-auto mb-4">
               <Users className="w-6 h-6" />
             </div>
             <h3 className="text-lg font-semibold mb-2">社区分享</h3>
