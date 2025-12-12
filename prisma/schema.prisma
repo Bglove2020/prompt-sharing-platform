@@ -52,7 +52,7 @@ model User {
 model Prompt {
   id          String   @id @default(uuid())
   title       String
-  content     String
+  content     String   @db.LongText
   description String?
   type        String   @default("BACKGROUND")
   authorId    String   
@@ -77,7 +77,7 @@ model Post{
   id          String   @id @default(uuid())
   title       String
   description String?
-  content    String
+  content    String   @db.LongText
   authorId    String
   author      User     @relation(fields: [authorId], references: [id])
   likeCount   Int      @default(0)
@@ -131,7 +131,7 @@ model PostLike{
 
 model Comment{
   id          String   @id @default(uuid())
-  content     String
+  content     String   @db.LongText
   authorId    String
   author      User     @relation(fields: [authorId], references: [id])
   postId      String
