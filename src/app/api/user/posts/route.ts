@@ -79,6 +79,7 @@ export async function GET(request: NextRequest) {
         authorId: post.authorId,
         avatar: post.author.avatar,
         name: post.author.name,
+        status: post.status,
       })),
       pagination: {
         page,

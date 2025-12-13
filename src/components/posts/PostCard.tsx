@@ -146,7 +146,7 @@ export function PostCard({ post }: PostCardProps) {
           </div>
 
           {/* 右侧三个点菜单 */}
-          <DropdownMenu>
+          {/* <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
@@ -193,7 +193,7 @@ export function PostCard({ post }: PostCardProps) {
                 举报
               </DropdownMenuItem>
             </DropdownMenuContent>
-          </DropdownMenu>
+          </DropdownMenu> */}
         </div>
 
         {/* 第二区域：帖子内容 */}
@@ -264,7 +264,9 @@ export function PostCard({ post }: PostCardProps) {
             <button
               onClick={handleLike}
               className={`flex items-center space-x-1 transition-colors ${
-                isLiked ? "text-destructive" : "text-muted-foreground hover:text-destructive"
+                isLiked
+                  ? "text-destructive"
+                  : "text-muted-foreground hover:text-destructive"
               }`}
             >
               <Heart className={`w-5 h-5 ${isLiked ? "fill-current" : ""}`} />

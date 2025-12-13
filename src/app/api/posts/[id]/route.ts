@@ -25,9 +25,10 @@ export async function GET(
     const user = await getCurrentUser();
 
     const post = await prisma.post.findFirst({
-      where: { id: params.id, status: "active", deletedAt: ACTIVE_SENTINEL },
+      where: { id: params.id, deletedAt: ACTIVE_SENTINEL },
       select: {
         id: true,
+        status: true,
         title: true,
         description: true,
         content: true,
@@ -43,6 +44,15 @@ export async function GET(
 
     if (!post) {
       return NextResponse.json({ error: "帖子不存在" }, { status: 404 });
+    }
+
+    if (post.status != "active") {
+      if (user?.id !== post.author.id) {
+        return NextResponse.json(
+          { error: "隐藏资源，无权限访问" },
+          { status: 403 }
+        );
+      }
     }
 
     const isLiked = user
@@ -89,7 +99,6 @@ export async function PATCH(
       where: {
         id: params.id,
         authorId: user.id,
-        status: "active",
         deletedAt: ACTIVE_SENTINEL,
       },
     });
@@ -102,13 +111,18 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const { title, description, content, tags } = body;
+    const { title, description, content, tags, status } = body;
 
     const data: Record<string, any> = {};
     if (title !== undefined) data.title = title;
     if (description !== undefined) data.description = description;
     if (content !== undefined) data.content = content;
     if (tags !== undefined) data.tags = tags;
+    if (status !== undefined) {
+      if (status === "active" || status === "hidden") {
+        data.status = status;
+      }
+    }
 
     const updated = await prisma.post.update({
       where: { id: params.id },
@@ -119,6 +133,7 @@ export async function PATCH(
         description: true,
         content: true,
         tags: true,
+        status: true,
         likeCount: true,
         commentCount: true,
         forkCount: true,
@@ -136,6 +151,7 @@ export async function PATCH(
         content: updated.content,
         author: updated.author,
         tags: updated.tags,
+        status: updated.status,
         likeCount: updated.likeCount,
         commentCount: updated.commentCount,
         forkCount: updated.forkCount,
@@ -163,7 +179,6 @@ export async function DELETE(
       where: {
         id: params.id,
         authorId: user.id,
-        status: "active",
         deletedAt: ACTIVE_SENTINEL,
       },
     });
@@ -177,7 +192,7 @@ export async function DELETE(
 
     await prisma.post.update({
       where: { id: params.id },
-      data: { status: "inactive", deletedAt: new Date() },
+      data: { deletedAt: new Date() },
     });
 
     return NextResponse.json({ message: "帖子已删除" });

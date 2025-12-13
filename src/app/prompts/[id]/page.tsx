@@ -245,7 +245,11 @@ export default function PromptDetailPage({
 
                   {/* 提交按钮 */}
                   <div className="flex justify-end gap-2">
-                    <Button variant="outline" onClick={() => router.back()}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => router.back()}
+                    >
                       取消
                     </Button>
                     {!canChange && (

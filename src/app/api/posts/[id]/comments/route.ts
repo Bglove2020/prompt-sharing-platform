@@ -33,7 +33,6 @@ export async function GET(
     const post = await prisma.post.findFirst({
       where: {
         id: postId,
-        status: "active",
         deletedAt: ACTIVE_SENTINEL,
       },
     });

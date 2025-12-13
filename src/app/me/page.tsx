@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage, Button } from "@/components/ui";
 import {
@@ -17,7 +17,7 @@ import { useSession } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { Pagination } from "@/types";
 import PromptCard from "@/components/propmtCard";
-import { PostCard } from "@/components/posts/PostCard";
+import { MyPostCard } from "@/components/posts/myPostCard";
 
 import { Prompt as PromptModel } from "@/generated/prisma/client";
 
@@ -36,6 +36,7 @@ interface Post {
   forkCount: number;
   createdAt: string;
   isLiked?: boolean;
+  status: string;
 }
 
 function MyPageContent() {
@@ -59,11 +60,7 @@ function MyPageContent() {
   const { data: session, status } = useSession();
   console.log("session", session);
 
-  useEffect(() => {
-    getMyData();
-  }, [activeTab]);
-
-  const getMyData = async () => {
+  const getMyData = useCallback(async () => {
     try {
       setLoading(true);
       const result = await axiosClient.get(
@@ -97,7 +94,11 @@ function MyPageContent() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [activeTab]);
+
+  useEffect(() => {
+    getMyData();
+  }, [getMyData]);
 
   const handleDelete = (id: string) => {
     setPrompts((prev) => prev.filter((p) => p.id !== id));
@@ -210,7 +211,13 @@ function MyPageContent() {
                         onDeleted={handleDelete}
                       />
                     ))
-                  : posts.map((item) => <PostCard key={item.id} post={item} />)}
+                  : posts.map((item) => (
+                      <MyPostCard
+                        key={item.id}
+                        post={item}
+                        onRefresh={getMyData}
+                      />
+                    ))}
               </div>
             )}
 
@@ -237,14 +244,16 @@ function MyPageContent() {
 
 export default function MyPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-background">
-        <NavbarAuthenticated />
-        <main className="container mx-auto px-4 py-4">
-          <p className="text-center text-muted-foreground py-8">加载中...</p>
-        </main>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-background">
+          <NavbarAuthenticated />
+          <main className="container mx-auto px-4 py-4">
+            <p className="text-center text-muted-foreground py-8">加载中...</p>
+          </main>
+        </div>
+      }
+    >
       <MyPageContent />
     </Suspense>
   );

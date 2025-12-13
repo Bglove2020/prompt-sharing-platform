@@ -118,7 +118,7 @@ export default function PostDetailPage() {
       setLikeCount(postData.likeCount ?? 0);
       setIsLiked(Boolean(postData.isLiked));
     } catch (error) {
-      // 错误已在拦截器中统一处理并显示 toast
+      // 报错没有权限就跳转至帖子广场
       router.push("/posts");
     } finally {
       setLoading(false);
