@@ -177,8 +177,8 @@ export default function NewPostPage() {
                           <SelectContent>
                             <SelectGroup>
                               <SelectLabel>状态</SelectLabel>
-                              <SelectItem value="active">发布</SelectItem>
-                              <SelectItem value="hidden">隐藏</SelectItem>
+                              <SelectItem value="active">公开</SelectItem>
+                              <SelectItem value="hidden">私密</SelectItem>
                             </SelectGroup>
                           </SelectContent>
                         </Select>

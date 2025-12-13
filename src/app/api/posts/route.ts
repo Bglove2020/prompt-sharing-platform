@@ -134,7 +134,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { title, content, description, tags } = parsed.data;
+    const { title, content, description, tags, status } = parsed.data;
 
     const post = await prisma.post.create({
       data: {
@@ -142,7 +142,7 @@ export async function POST(request: NextRequest) {
         description,
         content,
         authorId: user.id,
-        status: "active",
+        status,
         type: "background",
         deletedAt: ACTIVE_SENTINEL,
         tags: tags,

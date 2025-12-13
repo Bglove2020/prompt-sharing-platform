@@ -12,6 +12,7 @@ export const createPostSchema = z.object({
   content: z.string("内容必须是字符串").min(1, "内容不能为空"),
   description: z.string("描述必须是字符串").optional(),
   tags: z.string("标签必须是字符串"),
+  status: z.enum(["active", "hidden"]),
 });
 
 export type CreatePostData = z.infer<typeof createPostSchema>;
