@@ -44,6 +44,9 @@ export default function Home() {
             <p className="text-muted-foreground text-sm sm:text-base">
               支持ChatGPT、Claude、Gemini、DeepSeek等主流AI网站，一键快速插入您构建的提示词
             </p>
+            <p className="text-muted-foreground text-sm sm:text-base">
+              （开发中，敬请期待...）
+            </p>
           </div>
 
           <div className="text-center p-6 rounded-lg bg-card border border-border text-card-foreground">
