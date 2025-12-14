@@ -24,17 +24,47 @@ const allowedHeaders = [
 // 允许的请求方法列表
 const allowedMethods = "GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD";
 
-// 获取 CORS 响应头 - 写死测试版本
+// 获取 CORS 响应头
 function getCorsHeaders(request: NextRequest) {
-  // 直接写死，测试中间件是否生效
-  return {
-    "Access-Control-Allow-Origin": "https://chat.deepseek.com",
+  const origin = request.headers.get("origin");
+
+  // 动态返回请求的 origin（支持携带 credentials）
+  // 如果配置了 allowedOrigins，则检查是否在白名单中
+  // 如果没有配置（空数组），则允许所有 origin
+  let allowOrigin: string | null = null;
+
+  if (origin) {
+    if (allowedOrigins.length > 0) {
+      // 配置了白名单，检查 origin 是否在白名单中
+      if (allowedOrigins.includes(origin)) {
+        allowOrigin = origin;
+      }
+    } else {
+      // 没有配置白名单，允许所有 origin（动态返回请求的 origin）
+      allowOrigin = origin;
+    }
+  }
+
+  const headers: Record<string, string> = {
     "Access-Control-Allow-Methods": allowedMethods,
     "Access-Control-Allow-Headers": allowedHeaders,
-    "Access-Control-Allow-Credentials": "true",
-    "Access-Control-Max-Age": "86400",
-    Vary: "Origin",
+    "Access-Control-Max-Age": "86400", // 24 小时
   };
+
+  // 设置 Access-Control-Allow-Origin
+  // 携带 credentials 时必须返回具体的 origin，不能使用 *
+  if (allowOrigin) {
+    headers["Access-Control-Allow-Origin"] = allowOrigin;
+    headers["Access-Control-Allow-Credentials"] = "true";
+    // 当动态返回 origin 时，需要设置 Vary 头，告诉浏览器响应会根据 Origin 变化
+    headers["Vary"] = "Origin";
+  } else {
+    // 没有 origin 的请求（如同源请求或服务端请求）
+    // 不设置 CORS 头，或者设置为 * 但不能携带 credentials
+    headers["Access-Control-Allow-Origin"] = "*";
+  }
+
+  return headers;
 }
 
 // 处理 OPTIONS 预检请求
