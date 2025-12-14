@@ -60,7 +60,8 @@ export async function GET(request: NextRequest) {
 
     const total = await prisma.prompt.count({ where });
 
-    return NextResponse.json({
+    // 配置跨域：为响应添加 CORS 头
+    const response = NextResponse.json({
       data: prompts,
       pagination: {
         page,
@@ -71,6 +72,20 @@ export async function GET(request: NextRequest) {
         hasPrev: page > 1,
       },
     });
+    response.headers.set(
+      "Access-Control-Allow-Origin",
+      "https://chat.deepseek.com"
+    );
+    response.headers.set(
+      "Access-Control-Allow-Methods",
+      "GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD"
+    );
+    response.headers.set(
+      "Access-Control-Allow-Headers",
+      "Content-Type, Authorization, X-Requested-With, Accept, Origin, Cache-Control, X-CSRF-Token"
+    );
+    // 可以根据需要添加其他 CORS 头
+    return response;
   } catch (error) {
     console.error("Error fetching user prompts:", error);
     return NextResponse.json({ error: "获取提示词失败" }, { status: 500 });
