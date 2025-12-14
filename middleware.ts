@@ -5,7 +5,7 @@ import type { NextRequest } from "next/server";
 // 允许的源列表（如果需要限制特定域名，可以在这里配置）
 // 如果为空数组，则允许所有源
 const allowedOrigins: string[] = [
-  // "https://chat.deepseek.com",
+  "https://chat.deepseek.com",
   // "https://yourdomain.com",
   // 可以添加更多允许的源
 ];
