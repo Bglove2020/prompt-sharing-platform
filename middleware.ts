@@ -3,66 +3,65 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 // 允许的源列表（如果需要限制特定域名，可以在这里配置）
-// 如果为空数组，则允许所有源
+// 如果为空数组，则允许所有源（动态返回请求的 origin）
 const allowedOrigins: string[] = [
   "https://chat.deepseek.com",
   // "https://yourdomain.com",
   // 可以添加更多允许的源
 ];
 
+// 允许的请求头列表（携带 credentials 时不能使用 *）
+const allowedHeaders = [
+  "Content-Type",
+  "Authorization",
+  "X-Requested-With",
+  "Accept",
+  "Origin",
+  "Cache-Control",
+  "X-CSRF-Token",
+].join(", ");
+
+// 允许的请求方法列表
+const allowedMethods = "GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD";
+
 // 获取 CORS 响应头
 function getCorsHeaders(request: NextRequest) {
   const origin = request.headers.get("origin");
 
-  // 调试日志（生产环境可以移除）
-  console.log("[CORS] Request origin:", origin);
-  console.log("[CORS] Allowed origins:", allowedOrigins);
+  // 动态返回请求的 origin（支持携带 credentials）
+  // 如果配置了 allowedOrigins，则检查是否在白名单中
+  // 如果没有配置（空数组），则允许所有 origin
+  let allowOrigin: string | null = null;
 
-  let allowOrigin: string;
-
-  if (allowedOrigins.length > 0) {
-    // 如果配置了允许列表
-    if (origin && allowedOrigins.includes(origin)) {
-      // origin 在允许列表中，使用具体的 origin
-      allowOrigin = origin;
-      console.log("[CORS] Using allowed origin:", allowOrigin);
-    } else if (origin) {
-      // origin 存在但不在允许列表中
-      // 为了安全，我们应该拒绝，但为了调试，先允许
-      console.warn(
-        `[CORS] Origin ${origin} not in allowed list, but allowing for debugging`
-      );
-      allowOrigin = origin; // 生产环境应该改为拒绝或返回错误
+  if (origin) {
+    if (allowedOrigins.length > 0) {
+      // 配置了白名单，检查 origin 是否在白名单中
+      if (allowedOrigins.includes(origin)) {
+        allowOrigin = origin;
+      }
     } else {
-      // 没有 origin 头（可能是同源请求或直接访问），使用通配符
-      allowOrigin = "*";
-      console.log("[CORS] No origin header, using wildcard");
+      // 没有配置白名单，允许所有 origin（动态返回请求的 origin）
+      allowOrigin = origin;
     }
-  } else {
-    // 如果没有配置允许列表，允许所有源
-    // 如果有 origin，使用 origin；否则使用通配符
-    allowOrigin = origin || "*";
-    console.log("[CORS] No allowed list configured, using:", allowOrigin);
   }
 
-  // 构建 CORS 响应头
   const headers: Record<string, string> = {
-    "Access-Control-Allow-Methods":
-      "GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD",
-    "Access-Control-Allow-Headers": "*",
+    "Access-Control-Allow-Methods": allowedMethods,
+    "Access-Control-Allow-Headers": allowedHeaders,
     "Access-Control-Max-Age": "86400", // 24 小时
   };
 
   // 设置 Access-Control-Allow-Origin
-  if (allowOrigin !== "*") {
-    // 使用具体源，可以设置 credentials
+  // 携带 credentials 时必须返回具体的 origin，不能使用 *
+  if (allowOrigin) {
     headers["Access-Control-Allow-Origin"] = allowOrigin;
     headers["Access-Control-Allow-Credentials"] = "true";
-    console.log("[CORS] Final headers: specific origin with credentials");
+    // 当动态返回 origin 时，需要设置 Vary 头，告诉浏览器响应会根据 Origin 变化
+    headers["Vary"] = "Origin";
   } else {
-    // 使用通配符，不能设置 credentials
+    // 没有 origin 的请求（如同源请求或服务端请求）
+    // 不设置 CORS 头，或者设置为 * 但不能携带 credentials
     headers["Access-Control-Allow-Origin"] = "*";
-    console.log("[CORS] Final headers: wildcard origin (no credentials)");
   }
 
   return headers;
