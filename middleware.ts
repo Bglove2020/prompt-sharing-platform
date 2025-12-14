@@ -5,7 +5,7 @@ import type { NextRequest } from "next/server";
 // 允许的源列表（如果需要限制特定域名，可以在这里配置）
 // 如果为空数组，则允许所有源（动态返回请求的 origin）
 const allowedOrigins: string[] = [
-  "https://chat.deepseek.com",
+  // "https://chat.deepseek.com",
   // "https://yourdomain.com",
   // 可以添加更多允许的源
 ];
@@ -54,14 +54,22 @@ function getCorsHeaders(request: NextRequest) {
   // 设置 Access-Control-Allow-Origin
   // 携带 credentials 时必须返回具体的 origin，不能使用 *
   if (allowOrigin) {
+    // 允许的 origin（在白名单中或允许所有源）
     headers["Access-Control-Allow-Origin"] = allowOrigin;
     headers["Access-Control-Allow-Credentials"] = "true";
     // 当动态返回 origin 时，需要设置 Vary 头，告诉浏览器响应会根据 Origin 变化
     headers["Vary"] = "Origin";
+  } else if (origin && allowedOrigins.length > 0) {
+    // 有 origin 但不在白名单中，不设置 CORS 头（拒绝跨域请求）
+    // 这种情况下不添加 Access-Control-Allow-Origin，浏览器会拒绝请求
+    // 这是安全的行为：如果配置了白名单，只允许白名单中的源
   } else {
     // 没有 origin 的请求（如同源请求或服务端请求）
-    // 不设置 CORS 头，或者设置为 * 但不能携带 credentials
+    // 或者允许所有源但当前请求没有 origin 头
+    // 对于这种情况，设置 * 以支持基本 CORS
+    // 注意：使用 * 时不能设置 Access-Control-Allow-Credentials
     headers["Access-Control-Allow-Origin"] = "*";
+    // 不设置 Access-Control-Allow-Credentials，因为使用了 *
   }
 
   return headers;
@@ -70,6 +78,16 @@ function getCorsHeaders(request: NextRequest) {
 // 处理 OPTIONS 预检请求
 function handleOptions(request: NextRequest) {
   const corsHeaders = getCorsHeaders(request);
+
+  // 调试：在开发环境中记录 OPTIONS 请求
+  if (process.env.NODE_ENV === "development") {
+    console.log("[CORS] 处理 OPTIONS 预检请求:", {
+      path: request.nextUrl.pathname,
+      origin: request.headers.get("origin"),
+      headers: corsHeaders,
+    });
+  }
+
   return new NextResponse(null, {
     status: 200,
     headers: corsHeaders,
@@ -82,18 +100,30 @@ function addCorsHeaders(response: NextResponse, request: NextRequest) {
   Object.entries(corsHeaders).forEach(([key, value]) => {
     response.headers.set(key, value);
   });
+
+  // 调试：在开发环境中记录 CORS 头
+  if (process.env.NODE_ENV === "development") {
+    console.log("[CORS] 添加 CORS 头:", {
+      path: request.nextUrl.pathname,
+      method: request.method,
+      origin: request.headers.get("origin"),
+      headers: corsHeaders,
+    });
+  }
+
   return response;
 }
 
 export default withAuth(
   function middleware(req) {
-    // 处理 OPTIONS 预检请求
+    const pathname = req.nextUrl.pathname;
+
+    // 处理 OPTIONS 预检请求（必须在最前面处理）
     if (req.method === "OPTIONS") {
       return handleOptions(req);
     }
 
     const token = req.nextauth.token;
-    const pathname = req.nextUrl.pathname;
 
     // 定义不需要认证的公开路由
     const publicRoutes = [
@@ -159,18 +189,19 @@ export default withAuth(
 );
 
 // 配置需要保护的路由
-// 为了确保所有路由都有 CORS 头，我们匹配所有路由
+// 为了确保所有路由都有 CORS 头，我们匹配所有路由（包括 API 路由）
 // 但认证逻辑仍然只应用于需要保护的路由
 export const config = {
   matcher: [
     /*
-     * 匹配所有请求路径，除了：
-     * - api (API 路由)
+     * 匹配所有请求路径，包括 API 路由，除了：
      * - _next/static (静态文件)
      * - _next/image (图片优化文件)
      * - favicon.ico (favicon 文件)
      * - 公开的静态资源
      */
     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    // 明确包含 API 路由以确保 CORS 头被正确设置
+    "/api/:path*",
   ],
 };
