@@ -11,31 +11,31 @@ const nextConfig = {
     ],
   },
   // CORS 头现在由 middleware.ts 统一管理，支持动态 origin 和 credentials
-  // async headers() {
-  //   return [
-  //     {
-  //       source: "/:path*",
-  //       headers: [
-  //         {
-  //           key: "Access-Control-Allow-Origin",
-  //           value: "*",
-  //         },
-  //         {
-  //           key: "Access-Control-Allow-Methods",
-  //           value: "GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD",
-  //         },
-  //         {
-  //           key: "Access-Control-Allow-Headers",
-  //           value: "*",
-  //         },
-  //         {
-  //           key: "Access-Control-Max-Age",
-  //           value: "86400",
-  //         },
-  //       ],
-  //     },
-  //   ];
-  // },
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          {
+            key: "Access-Control-Allow-Origin",
+            value: "https://chat.deepseek.com",
+          },
+          {
+            key: "Access-Control-Allow-Methods",
+            value: "GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD",
+          },
+          {
+            key: "Access-Control-Allow-Headers",
+            value: "*",
+          },
+          {
+            key: "Access-Control-Max-Age",
+            value: "86400",
+          },
+        ],
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;
