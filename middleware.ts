@@ -2,17 +2,52 @@ import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-// CORS 响应头配置
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods":
-    "GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD",
-  "Access-Control-Allow-Headers": "*",
-  "Access-Control-Max-Age": "86400", // 24 小时
-};
+// 允许的源列表（如果需要限制特定域名，可以在这里配置）
+// 如果为空数组，则允许所有源
+const allowedOrigins: string[] = [
+  // "https://chat.deepseek.com",
+  // "https://yourdomain.com",
+  // 可以添加更多允许的源
+];
+
+// 获取 CORS 响应头
+function getCorsHeaders(request: NextRequest) {
+  const origin = request.headers.get("origin");
+
+  // 如果配置了允许的源列表，检查是否在列表中
+  // 如果没有配置（空数组），则允许所有源
+  const allowOrigin =
+    allowedOrigins.length > 0
+      ? allowedOrigins.includes(origin || "")
+        ? origin
+        : null
+      : origin || "*";
+
+  // 如果使用通配符，不能设置 credentials
+  // 如果使用具体源，可以设置 credentials
+  const headers: Record<string, string> = {
+    "Access-Control-Allow-Methods":
+      "GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD",
+    "Access-Control-Allow-Headers": "*",
+    "Access-Control-Max-Age": "86400", // 24 小时
+  };
+
+  // 设置 Access-Control-Allow-Origin
+  if (allowOrigin && allowOrigin !== "*") {
+    headers["Access-Control-Allow-Origin"] = allowOrigin;
+    // 当使用具体源时，可以设置 credentials
+    headers["Access-Control-Allow-Credentials"] = "true";
+  } else {
+    // 使用通配符时，不能设置 credentials
+    headers["Access-Control-Allow-Origin"] = "*";
+  }
+
+  return headers;
+}
 
 // 处理 OPTIONS 预检请求
 function handleOptions(request: NextRequest) {
+  const corsHeaders = getCorsHeaders(request);
   return new NextResponse(null, {
     status: 200,
     headers: corsHeaders,
@@ -20,7 +55,8 @@ function handleOptions(request: NextRequest) {
 }
 
 // 为响应添加 CORS 头
-function addCorsHeaders(response: NextResponse) {
+function addCorsHeaders(response: NextResponse, request: NextRequest) {
+  const corsHeaders = getCorsHeaders(request);
   Object.entries(corsHeaders).forEach(([key, value]) => {
     response.headers.set(key, value);
   });
@@ -51,7 +87,7 @@ export default withAuth(
     // 如果是公开路由，直接通过并添加 CORS 头
     if (isPublicRoute) {
       const response = NextResponse.next();
-      return addCorsHeaders(response);
+      return addCorsHeaders(response, req);
     }
 
     // 定义需要认证的路由
@@ -70,7 +106,7 @@ export default withAuth(
           { error: "请先登录", code: "UNAUTHORIZED" },
           { status: 401 }
         );
-        return addCorsHeaders(response);
+        return addCorsHeaders(response, req);
       }
 
       // 页面路由重定向到登录页，携带 callbackUrl 和错误消息参数
@@ -78,12 +114,12 @@ export default withAuth(
       loginUrl.searchParams.set("callbackUrl", pathname);
       loginUrl.searchParams.set("error", "请先登录以访问此页面");
       const response = NextResponse.redirect(loginUrl);
-      return addCorsHeaders(response);
+      return addCorsHeaders(response, req);
     }
 
     // 其他路由（公开页面路由等）直接通过并添加 CORS 头
     const response = NextResponse.next();
-    return addCorsHeaders(response);
+    return addCorsHeaders(response, req);
   },
   {
     callbacks: {
