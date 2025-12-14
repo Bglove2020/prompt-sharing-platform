@@ -39,6 +39,7 @@ function getCorsHeaders(request: NextRequest) {
       if (allowedOrigins.includes(origin)) {
         allowOrigin = origin;
       }
+      // 如果不在白名单中，allowOrigin 保持为 null，后面会处理
     } else {
       // 没有配置白名单，允许所有 origin（动态返回请求的 origin）
       allowOrigin = origin;
@@ -54,15 +55,16 @@ function getCorsHeaders(request: NextRequest) {
   // 设置 Access-Control-Allow-Origin
   // 携带 credentials 时必须返回具体的 origin，不能使用 *
   if (allowOrigin) {
-    // 允许的 origin（在白名单中或允许所有源）
+    // 有允许的 origin（在白名单中或允许所有源）
     headers["Access-Control-Allow-Origin"] = allowOrigin;
     headers["Access-Control-Allow-Credentials"] = "true";
     // 当动态返回 origin 时，需要设置 Vary 头，告诉浏览器响应会根据 Origin 变化
     headers["Vary"] = "Origin";
   } else if (origin && allowedOrigins.length > 0) {
-    // 有 origin 但不在白名单中，不设置 CORS 头（拒绝跨域请求）
+    // 有 origin 但不在白名单中，不设置 Access-Control-Allow-Origin（拒绝跨域请求）
     // 这种情况下不添加 Access-Control-Allow-Origin，浏览器会拒绝请求
     // 这是安全的行为：如果配置了白名单，只允许白名单中的源
+    // 但仍然设置其他 CORS 头，以便调试
   } else {
     // 没有 origin 的请求（如同源请求或服务端请求）
     // 或者允许所有源但当前请求没有 origin 头
@@ -97,17 +99,27 @@ function handleOptions(request: NextRequest) {
 // 为响应添加 CORS 头
 function addCorsHeaders(response: NextResponse, request: NextRequest) {
   const corsHeaders = getCorsHeaders(request);
+
+  // 确保所有 CORS 头都被设置
   Object.entries(corsHeaders).forEach(([key, value]) => {
-    response.headers.set(key, value);
+    if (value) {
+      // 使用 append 而不是 set，确保头不会被覆盖
+      response.headers.set(key, value);
+    }
   });
 
   // 调试：在开发环境中记录 CORS 头
   if (process.env.NODE_ENV === "development") {
+    const origin = request.headers.get("origin");
     console.log("[CORS] 添加 CORS 头:", {
       path: request.nextUrl.pathname,
       method: request.method,
-      origin: request.headers.get("origin"),
-      headers: corsHeaders,
+      origin: origin || "(无 origin，同源请求)",
+      "Access-Control-Allow-Origin":
+        corsHeaders["Access-Control-Allow-Origin"] || "(未设置)",
+      "Access-Control-Allow-Credentials":
+        corsHeaders["Access-Control-Allow-Credentials"] || "(未设置)",
+      allHeaders: corsHeaders,
     });
   }
 
@@ -117,9 +129,15 @@ function addCorsHeaders(response: NextResponse, request: NextRequest) {
 export default withAuth(
   function middleware(req) {
     const pathname = req.nextUrl.pathname;
+    const method = req.method;
+
+    // 调试日志
+    if (process.env.NODE_ENV === "development") {
+      console.log(`[Middleware] ${method} ${pathname}`);
+    }
 
     // 处理 OPTIONS 预检请求（必须在最前面处理）
-    if (req.method === "OPTIONS") {
+    if (method === "OPTIONS") {
       return handleOptions(req);
     }
 
@@ -201,7 +219,5 @@ export const config = {
      * - 公开的静态资源
      */
     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
-    // 明确包含 API 路由以确保 CORS 头被正确设置
-    "/api/:path*",
   ],
 };
