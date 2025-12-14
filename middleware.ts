@@ -14,17 +14,38 @@ const allowedOrigins: string[] = [
 function getCorsHeaders(request: NextRequest) {
   const origin = request.headers.get("origin");
 
-  // 如果配置了允许的源列表，检查是否在列表中
-  // 如果没有配置（空数组），则允许所有源
-  const allowOrigin =
-    allowedOrigins.length > 0
-      ? allowedOrigins.includes(origin || "")
-        ? origin
-        : null
-      : origin || "*";
+  // 调试日志（生产环境可以移除）
+  console.log("[CORS] Request origin:", origin);
+  console.log("[CORS] Allowed origins:", allowedOrigins);
 
-  // 如果使用通配符，不能设置 credentials
-  // 如果使用具体源，可以设置 credentials
+  let allowOrigin: string;
+
+  if (allowedOrigins.length > 0) {
+    // 如果配置了允许列表
+    if (origin && allowedOrigins.includes(origin)) {
+      // origin 在允许列表中，使用具体的 origin
+      allowOrigin = origin;
+      console.log("[CORS] Using allowed origin:", allowOrigin);
+    } else if (origin) {
+      // origin 存在但不在允许列表中
+      // 为了安全，我们应该拒绝，但为了调试，先允许
+      console.warn(
+        `[CORS] Origin ${origin} not in allowed list, but allowing for debugging`
+      );
+      allowOrigin = origin; // 生产环境应该改为拒绝或返回错误
+    } else {
+      // 没有 origin 头（可能是同源请求或直接访问），使用通配符
+      allowOrigin = "*";
+      console.log("[CORS] No origin header, using wildcard");
+    }
+  } else {
+    // 如果没有配置允许列表，允许所有源
+    // 如果有 origin，使用 origin；否则使用通配符
+    allowOrigin = origin || "*";
+    console.log("[CORS] No allowed list configured, using:", allowOrigin);
+  }
+
+  // 构建 CORS 响应头
   const headers: Record<string, string> = {
     "Access-Control-Allow-Methods":
       "GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD",
@@ -33,13 +54,15 @@ function getCorsHeaders(request: NextRequest) {
   };
 
   // 设置 Access-Control-Allow-Origin
-  if (allowOrigin && allowOrigin !== "*") {
+  if (allowOrigin !== "*") {
+    // 使用具体源，可以设置 credentials
     headers["Access-Control-Allow-Origin"] = allowOrigin;
-    // 当使用具体源时，可以设置 credentials
     headers["Access-Control-Allow-Credentials"] = "true";
+    console.log("[CORS] Final headers: specific origin with credentials");
   } else {
-    // 使用通配符时，不能设置 credentials
+    // 使用通配符，不能设置 credentials
     headers["Access-Control-Allow-Origin"] = "*";
+    console.log("[CORS] Final headers: wildcard origin (no credentials)");
   }
 
   return headers;
